@@ -3,10 +3,11 @@ from datetime import timedelta
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
-from .models import Category, Author, Post, PostCategory, Comment, CategorySubscribe
+from .models import Post, PostCategory, CategorySubscribe
 
 
 @shared_task
+
 def monday():
     some_day_last_week = timezone.now().date() - timedelta(days=7)
     post = Post.objects.filter(created__gt=some_day_last_week)

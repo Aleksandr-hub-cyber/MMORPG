@@ -1,39 +1,40 @@
-from django.core.mail import EmailMultiAlternatives
-from django.db.models.signals import m2m_changed
+from django.db.models.signals import post_save
+from django.core.mail import send_mail
+from .models import Responses, CategorySubscribe
 from django.dispatch import receiver
-from django.template.loader import render_to_string
-from .models import PostCategory
-from NewsPaper import settings
 
 
-def send_notifications(preview, pk, title, subscribers):
-    html_contect = render_to_string(
-        'new_post_news.html',
-        {
-            'text': preview,
-            'link': f'{settings.SITE_URL}/news/{pk}'
-        }
+@receiver(post_save, sender=Responses)
+def notify_user_subscribe(sender, instance, created, **kwargs):
+    if created:
+        subject = f'Новый отклик'
+    else:
+        subject = f'Ваш отклик одобрен'
+
+    send_mail(
+        subject=subject,
+        message=f'Вам оставлен новый отклик: {instance.text_responses}',
+        from_email='win.c4ester@yandex.ru',
+        recipient_list=[f'{instance.responses_comment.author_name.email}'],
     )
 
-    msg = EmailMultiAlternatives(
-        subject=title,
-        body='',
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=subscribed,
+
+#
+def notify_user_subscribe(sender, instance, created, **kwargs):
+    subject = f'Новый публикация'
+    send_mail(
+        subject=subject,
+        message=f'Новая публикая в разделе: {instance.header}',
+        from_email='win.c4ester@yandex.ru',
+        recipient_list=[f'{instance.author_name.email}'],
     )
-    # print(settings.DEFAULT_FROM_EMAIL)
-    msg.attach_alternative(html_contect, 'text/html')
-    msg.send()
 
 
-@receiver(m2m_changed, sender=PostCategory)
-def notify_about_new_post(sender, instance, **kwargs):
-    if kwargs['action'] == 'post_add':
-        categories = instance.category.all()
-        subscribers_emails = []
-
-        for cat in categories:
-            subscribers = cat.subscribers.all()
-            subscribers_emails += [s.email for s in subscribers]
-
-        send_notifications(instance.preview(), instance.pk, instance.title, subscribers_emails)
+@receiver(post_save, sender=CategorySubscribe)
+def notify_user_subscribe(sender, instance, created, **kwargs):
+    subject = f'Подписка оформлена'
+    send_mail(
+        subject=subject,
+        message=f'Вы успешно подписались на категорию: {instance.category.name_category}',
+        from_email='win.c4ester@yandex.ru',
+        recipient_list=[f'{instance.subscriber.email}'])

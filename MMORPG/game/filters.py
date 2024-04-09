@@ -1,12 +1,14 @@
 from django_filters import FilterSet, DateFilter
-from .models import Post, Author
+from django.forms import DateInput
+from .models import Responses
+import django_filters
 
-class PostFilter(FilterSet):
 
+class ResponsesFilter(FilterSet):
     class Meta:
-        model = Post
+        model = Responses
         fields = {
-            'post_title': ['icontains'],
-            'author': ['exact'],
-            'created_at': ['gt']
+            'text_responses': ['icontains'],
+            'user_responses': ['exact'],
+            'accepted': ['exact'],
         }
